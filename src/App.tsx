@@ -1,18 +1,268 @@
-import {useCallback,useEffect,useMemo,useState} from 'react';
-import {Api,ApiError} from './api';
-import type {Role,Session} from './types';
-import {ActionForm,Field,text} from './ui';
-import {Books} from './Books';import {Members} from './Members';import {Loans,Overdues} from './Loans';import {Librarians,Reports} from './Admin';
-const links=[['catalog','Catálogo'],['members','Socios'],['loans','Préstamos'],['overdue','Vencidos'],['reports','Reporte'],['users','Bibliotecarios']] as const;
-function Logo(){return <span className="logo-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg></span>;}
-export default function App(){
-  const [session,setSession]=useState<Session|null>(null);const [notice,setNotice]=useState('');const [page,setPage]=useState(window.location.hash.slice(1)||'catalog');
-  const expire=useCallback(()=>{setSession(null);setNotice('Tu sesión terminó. Inicia sesión para continuar.');},[]);
-  const api=useMemo(()=>new Api(import.meta.env.VITE_API_BASE_URL||'/api/v1',()=>session?.access_token??null,expire),[session,expire]);
-  useEffect(()=>{if(!session)return;const timer=setTimeout(expire,Math.max(0,session.expiresAt-Date.now()));return ()=>clearTimeout(timer);},[session,expire]);
-  useEffect(()=>{const change=()=>{const hash=window.location.hash.slice(1);if(hash!=='content')setPage(hash||'catalog');};window.addEventListener('hashchange',change);return ()=>window.removeEventListener('hashchange',change);},[]);
-  const visible=links.filter(([id])=>session?.role==='admin'||!['reports','users'].includes(id));
-  const selected=visible.some(([id])=>id===page)?page:'catalog';
-  if(!session)return <div className="login-layout"><section className="login-story"><div className="brand"><Logo/>Manager Library</div><p className="eyebrow">UN ESPACIO PARA CADA HISTORIA</p><h1>Libros que circulan.<br/><em>Historias que<br/>permanecen.</em></h1><p>El catálogo, los socios y cada préstamo.<br/>Tu biblioteca, en un solo lugar.</p><div className="shelf-art" aria-hidden="true"><i/><i/><i/><i/><i/></div><span className="story-footer">GESTIÓN DE BIBLIOTECA · ADSO 3145555</span></section><main className="login-main"><p className="eyebrow">BIENVENIDO A TU BIBLIOTECA</p><h2>Iniciar sesión</h2><p className="muted">Accede con tu cuenta de administrador o bibliotecario.</p>{notice&&<p className="notice" role="status">{notice}</p>}<ActionForm label="Entrar a la biblioteca" onSubmit={async f=>{const result=await api.call<{access_token:string;token_type:string;expires_in:number;role:Role}>('/auth/login',{method:'POST',body:{username:text(f,'username'),password:text(f,'password')}});if(!['admin','librarian'].includes(result.role)||result.token_type!=='Bearer'||typeof result.access_token!=='string'||result.expires_in!==28800)throw new ApiError(0,'INVALID_RESPONSE','La respuesta de acceso no es válida.');setNotice('');setSession({access_token:result.access_token,role:result.role,expiresAt:Date.now()+result.expires_in*1000});}}><Field label="Usuario"><input name="username" autoComplete="username" required maxLength={120}/></Field><Field label="Contraseña"><input name="password" type="password" autoComplete="current-password" required/></Field></ActionForm><p className="login-note">Acceso exclusivo para el equipo de la biblioteca.</p></main></div>;
-  return <div className="workspace"><a className="skip-link" href="#content">Ir al contenido</a><aside className="sidebar"><div className="brand"><Logo/><span>Manager<br/><strong>Library</strong></span></div><p className="nav-caption">TU BIBLIOTECA</p><nav aria-label="Navegación principal">{visible.map(([id,label])=><a key={id} href={'#'+id} aria-current={selected===id?'page':undefined}><span aria-hidden="true">{({catalog:'▤',members:'♧',loans:'⇄',overdue:'◷',reports:'▥',users:'♙'} as Record<string,string>)[id]}</span>{label}</a>)}</nav><div className="sidebar-footer"><span className="avatar">{session.role==='admin'?'A':'B'}</span><div><strong>{session.role==='admin'?'Administrador':'Bibliotecario'}</strong><small>Sesión activa</small></div><button className="logout" onClick={()=>{setSession(null);setNotice('Sesión cerrada.');}} aria-label="Cerrar sesión">↗</button></div></aside><div className="main-area"><header className="topbar"><span>Biblioteca <span className="muted">/ {visible.find(([id])=>id===selected)?.[1]}</span></span><span className="top-label">MANAGER LIBRARY</span></header><main id="content" className="content" tabIndex={-1} key={session.expiresAt}>{selected==='catalog'?<Books api={api} role={session.role}/>:selected==='members'?<Members api={api}/>:selected==='loans'?<Loans api={api}/>:selected==='overdue'?<Overdues api={api}/>:selected==='reports'?<Reports api={api}/>:<Librarians api={api}/>}</main><footer className="app-footer">Manager Library <span>Un libro, una nueva historia.</span></footer></div></div>;
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Api, ApiError } from "./api";
+import type { Role, Session } from "./types";
+import { ActionForm, Field, text } from "./ui";
+import { Books } from "./Books";
+import { Members } from "./Members";
+import { Loans, Overdues } from "./Loans";
+import { Librarians, Reports } from "./Admin";
+const links = [
+  ["catalog", "Catálogo"],
+  ["members", "Socios"],
+  ["loans", "Préstamos"],
+  ["overdue", "Vencidos"],
+  ["reports", "Reporte"],
+  ["users", "Bibliotecarios"],
+] as const;
+function Logo() {
+  return (
+    <span className="logo-mark" aria-hidden="true">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M12 6v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z" />
+      </svg>
+    </span>
+  );
+}
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [notice, setNotice] = useState("");
+  const [page, setPage] = useState(window.location.hash.slice(1) || "catalog");
+  const expire = useCallback(() => {
+    setSession(null);
+    setNotice("Tu sesión terminó. Inicia sesión para continuar.");
+  }, []);
+  const api = useMemo(
+    () =>
+      new Api(
+        import.meta.env.VITE_API_BASE_URL || "/api/v1",
+        () => session?.access_token ?? null,
+        expire,
+      ),
+    [session, expire],
+  );
+  useEffect(() => {
+    if (!session) return;
+    const timer = setTimeout(
+      expire,
+      Math.max(0, session.expiresAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [session, expire]);
+  useEffect(() => {
+    const change = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash !== "content") setPage(hash || "catalog");
+    };
+    window.addEventListener("hashchange", change);
+    return () => window.removeEventListener("hashchange", change);
+  }, []);
+  const visible = links.filter(
+    ([id]) => session?.role === "admin" || !["reports", "users"].includes(id),
+  );
+  const selected = visible.some(([id]) => id === page) ? page : "catalog";
+  if (!session)
+    return (
+      <div className="login-layout">
+        <section className="login-story">
+          <div className="brand">
+            <Logo />
+            Manager Library
+          </div>
+          <p className="eyebrow">UN ESPACIO PARA CADA HISTORIA</p>
+          <h1>
+            Libros que circulan.
+            <br />
+            <em>
+              Historias que
+              <br />
+              permanecen.
+            </em>
+          </h1>
+          <p>
+            El catálogo, los socios y cada préstamo.
+            <br />
+            Tu biblioteca, en un solo lugar.
+          </p>
+          <div className="shelf-art" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
+          <span className="story-footer">
+            GESTIÓN DE BIBLIOTECA · ADSO 3145555
+          </span>
+        </section>
+        <main className="login-main">
+          <p className="eyebrow">BIENVENIDO A TU BIBLIOTECA</p>
+          <h2>Iniciar sesión</h2>
+          <p className="muted">
+            Accede con tu cuenta de administrador o bibliotecario.
+          </p>
+          {notice && (
+            <p className="notice" role="status">
+              {notice}
+            </p>
+          )}
+          <ActionForm
+            label="Entrar a la biblioteca"
+            onSubmit={async (f) => {
+              const result = await api.call<{
+                access_token: string;
+                token_type: string;
+                expires_in: number;
+                role: Role;
+              }>("/auth/login", {
+                method: "POST",
+                body: {
+                  username: text(f, "username"),
+                  password: text(f, "password"),
+                },
+              });
+              if (
+                !["admin", "librarian"].includes(result.role) ||
+                result.token_type !== "Bearer" ||
+                typeof result.access_token !== "string" ||
+                result.expires_in !== 28800
+              )
+                throw new ApiError(
+                  0,
+                  "INVALID_RESPONSE",
+                  "La respuesta de acceso no es válida.",
+                );
+              setNotice("");
+              setSession({
+                access_token: result.access_token,
+                role: result.role,
+                expiresAt: Date.now() + result.expires_in * 1000,
+              });
+            }}
+          >
+            <Field label="Usuario">
+              <input
+                name="username"
+                autoComplete="username"
+                required
+                maxLength={120}
+              />
+            </Field>
+            <Field label="Contraseña">
+              <input
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </Field>
+          </ActionForm>
+          <p className="login-note">
+            Acceso exclusivo para el equipo de la biblioteca.
+          </p>
+        </main>
+      </div>
+    );
+  return (
+    <div className="workspace">
+      <a className="skip-link" href="#content">
+        Ir al contenido
+      </a>
+      <aside className="sidebar">
+        <div className="brand">
+          <Logo />
+          <span>
+            Manager
+            <br />
+            <strong>Library</strong>
+          </span>
+        </div>
+        <p className="nav-caption">TU BIBLIOTECA</p>
+        <nav aria-label="Navegación principal">
+          {visible.map(([id, label]) => (
+            <a
+              key={id}
+              href={"#" + id}
+              aria-current={selected === id ? "page" : undefined}
+            >
+              <span aria-hidden="true">
+                {
+                  (
+                    {
+                      catalog: "▤",
+                      members: "♧",
+                      loans: "⇄",
+                      overdue: "◷",
+                      reports: "▥",
+                      users: "♙",
+                    } as Record<string, string>
+                  )[id]
+                }
+              </span>
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <span className="avatar">{session.role === "admin" ? "A" : "B"}</span>
+          <div>
+            <strong>
+              {session.role === "admin" ? "Administrador" : "Bibliotecario"}
+            </strong>
+            <small>Sesión activa</small>
+          </div>
+          <button
+            className="logout"
+            onClick={() => {
+              setSession(null);
+              setNotice("Sesión cerrada.");
+            }}
+            aria-label="Cerrar sesión"
+          >
+            ↗
+          </button>
+        </div>
+      </aside>
+      <div className="main-area">
+        <header className="topbar">
+          <span>
+            Biblioteca{" "}
+            <span className="muted">
+              / {visible.find(([id]) => id === selected)?.[1]}
+            </span>
+          </span>
+          <span className="top-label">MANAGER LIBRARY</span>
+        </header>
+        <main
+          id="content"
+          className="content"
+          tabIndex={-1}
+          key={session.expiresAt}
+        >
+          {selected === "catalog" ? (
+            <Books api={api} role={session.role} />
+          ) : selected === "members" ? (
+            <Members api={api} />
+          ) : selected === "loans" ? (
+            <Loans api={api} />
+          ) : selected === "overdue" ? (
+            <Overdues api={api} />
+          ) : selected === "reports" ? (
+            <Reports api={api} />
+          ) : (
+            <Librarians api={api} />
+          )}
+        </main>
+        <footer className="app-footer">
+          Manager Library <span>Un libro, una nueva historia.</span>
+        </footer>
+      </div>
+    </div>
+  );
 }
