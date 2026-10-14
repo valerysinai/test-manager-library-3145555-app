@@ -48,3 +48,55 @@ No hay prórroga: suban avances parciales con commits pequeños durante la prueb
 | [`test-manager-library-3145555-page`](https://github.com/code-sena/test-manager-library-3145555-page) | Sitio público estático de presentación |
 | [`test-manager-library-3145555-infra`](https://github.com/code-sena/test-manager-library-3145555-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
 | [`test-manager-library-3145555-tool`](https://github.com/code-sena/test-manager-library-3145555-tool) | Utilidades: sembrador de datos de demostración |
+
+## T-22 · Interfaz React
+
+El [plan SDD previo](evidence/t-22-plan.md) fue publicado antes del código. La
+[evidencia y lista de aceptación](evidence/t-22.md) distingue pruebas simuladas y recorrido integrado.
+
+La interfaz implementa login, catálogo, gestión de libros y portadas para admin, socios,
+préstamos de 1–3 libros distintos, devolución individual, vencidos, reporte y alta de bibliotecarios.
+Las acciones se muestran según rol; el servidor sigue siendo responsable de autorización,
+existencias, unicidad, vencimientos y reglas de negocio. No hay alta de administradores ni
+edición/eliminación de socios o préstamos.
+
+### Desarrollo y verificación
+
+Requisitos: Node.js 26.5 y npm 11.17 o compatible con el lockfile.
+
+```sh
+npm ci --ignore-scripts
+npm test
+npm run build
+npm run dev
+```
+
+React/React DOM 19.2.9, Vite 8.3.4 y dependencias exactas se conservan en package-lock.json.
+`npm run dev` escucha solamente en la máquina local. La pantalla se puede revisar por HTTP,
+pero login y llamadas a la biblioteca requieren HTTPS confiable. No se desactiva validación TLS.
+
+### Conexión con la API
+
+`VITE_API_BASE_URL` es configuración pública de compilación; su valor predeterminado es
+`/api/v1`. El despliegue de infra sirve React por HTTPS y reenvía `/api/v1` a Laravel en su red
+privada. Si se usa otro origen HTTPS, configurar también `CORS_ORIGIN` en la API con el origen
+exacto de React. Nunca incluir JWT_SECRET, credenciales de base ni admin en variables VITE.
+
+El token queda únicamente en memoria, desaparece al recargar/cerrar sesión y caduca a las
+ocho horas. Una respuesta 401 autenticada vuelve al login. Las portadas se consultan con Bearer,
+se muestran con URL de objeto y se liberan al cerrar o sustituir el detalle. No se exponen rutas
+de disco. Las fechas se presentan explícitamente en UTC y los mensajes están en español.
+
+### Contenedor
+
+```sh
+docker build --build-arg VITE_API_BASE_URL=/api/v1 -t manager-library-app .
+```
+
+El contenedor sirve archivos estáticos por su puerto interno 80. Su red, proxy HTTPS y conexión
+a Laravel corresponden a T-20 en infra. Este repositorio no crea tablas ni ejecuta migraciones.
+El Dockerfile se entrega para ese despliegue; la compilación local no acredita su construcción.
+
+El flujo React checks instala desde el lockfile, ejecuta pruebas y compila. La aceptación T-22
+de punta a punta sigue requiriendo API, base e infraestructura desplegadas juntas; los tests
+con respuestas simuladas no sustituyen ese recorrido. Se conserva la fecha original de entrega.
