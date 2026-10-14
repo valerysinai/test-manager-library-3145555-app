@@ -1,0 +1,12 @@
+import {useState} from 'react';
+import {Api,query} from './api';
+import type {Report} from './types';
+import {ActionForm,Failure,Field,Loading,Panel,text,useLoad} from './ui';
+export function Librarians({api}:{api:Api}){
+  const [created,setCreated]=useState<{id:string;username:string;role:string}>();
+  return <><p className="eyebrow">ADMINISTRACIÓN</p><h1>Bibliotecarios</h1><Panel title="Crear bibliotecario"><p className="muted">Las nuevas cuentas tienen rol de bibliotecario.</p>{created&&<p className="notice" role="status">Cuenta creada: {created.username}.</p>}<ActionForm label="Crear cuenta" onSubmit={async f=>{setCreated(undefined);setCreated(await api.call('/users',{method:'POST',body:{username:text(f,'username'),password:text(f,'password'),role:'librarian'}}));}}><div className="form-grid"><Field label="Nombre de usuario"><input name="username" required maxLength={120} autoComplete="off"/></Field><Field label="Contraseña inicial"><input name="password" type="password" required autoComplete="new-password"/></Field></div></ActionForm></Panel></>;
+}
+export function Reports({api}:{api:Api}){
+  const [range,setRange]=useState<{from:string;to:string}>();const result=useLoad<Report|undefined>(s=>range?api.call('/reports/most-borrowed'+query(range),{signal:s}):Promise.resolve(undefined),[api,range]);
+  return <><p className="eyebrow">HISTORIAL DE LECTURA</p><h1>Libros más prestados</h1><p className="muted">Títulos y categorías conservados al prestar, sin datos personales.</p><form className="filters" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setRange({from:text(f,'from'),to:text(f,'to')});}}><Field label="Desde"><input name="from" type="date" required/></Field><Field label="Hasta"><input name="to" type="date" required/></Field><button className="primary">Consultar reporte</button></form><Failure error={result.error}/>{range&&result.loading&&<Loading/>}{result.data&&<><p>{result.data.from} — {result.data.to} · Ambos días incluidos (UTC)</p><div className="table-wrap"><table><thead><tr><th>Título congelado</th><th>Categoría congelada</th><th>Veces prestado</th></tr></thead><tbody>{result.data.rows.map((r,i)=><tr key={r.book_id+'-'+i}><td>{r.book_title}</td><td>{r.category_name}</td><td><strong>{r.times_borrowed}</strong></td></tr>)}</tbody></table></div>{result.data.rows.length===0&&<p className="empty">No hay préstamos en este periodo.</p>}</>}</>;
+}

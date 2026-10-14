@@ -14,7 +14,7 @@ export function Pager({data,onPage}:{data:Page<unknown>;onPage:(n:number)=>void}
 export function date(value:string){return new Intl.DateTimeFormat('es-CO',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'}).format(new Date(value))+' UTC';}
 export function ActionForm({children,onSubmit,label='Guardar',onDone}:{children:ReactNode;onSubmit:(data:FormData)=>Promise<unknown>;label?:string;onDone?:()=>void}){
   const [busy,setBusy]=useState(false);const [error,setError]=useState<unknown>();
-  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();if(busy)return;const form=e.currentTarget;const values=new FormData(form);setBusy(true);setError(undefined);try{await onSubmit(values);form.reset();onDone?.();}catch(e){setError(e);}finally{setBusy(false);}}
+  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();if(busy)return;const form=e.currentTarget;const values=new FormData(form);setBusy(true);setError(undefined);try{await onSubmit(values);form.reset();onDone?.();}catch(e){setError(e);}finally{form.querySelectorAll<HTMLInputElement>('input[type="password"]').forEach(input=>{input.value='';});setBusy(false);}}
   return <form onSubmit={submit}><Failure error={error}/><fieldset disabled={busy}>{children}<button className="primary" type="submit">{busy?'Guardando…':label}</button></fieldset></form>;
 }
 export const text=(f:FormData,k:string)=>String(f.get(k)??'');
