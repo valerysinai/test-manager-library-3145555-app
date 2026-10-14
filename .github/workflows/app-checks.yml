@@ -1,0 +1,24 @@
+name: React checks
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install locked packages, test journeys and compile
+        run: |
+          docker run --rm -v "$PWD:/app" -w /app node:26.5.0-alpine \
+            sh -c 'npm ci --ignore-scripts && npm test && npm run build'
+      - name: Check tracked secret patterns without values
+        run: |
+          python3 -m unittest discover -s scripts -p test_check_secrets.py
+          python3 scripts/check_secrets.py

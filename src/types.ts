@@ -1,0 +1,54 @@
+export type Role = "admin" | "librarian";
+export type Session = { access_token: string; role: Role; expiresAt: number };
+export type Category = { id: string; name: string };
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  isbn: string;
+  category: Category;
+  total_copies: number;
+  available_copies: number;
+  cover_key: string | null;
+};
+export type Member = {
+  id: string;
+  full_name: string;
+  document_number: string;
+  active_loans?: number;
+};
+export type Item = {
+  id: string;
+  book_id: string;
+  book_title: string;
+  isbn: string;
+  category_name: string;
+  due_at: string;
+  returned_at: string | null;
+};
+export type Loan = {
+  id: string;
+  member_id: string;
+  loaned_at: string;
+  status: "open" | "overdue" | "closed";
+  items: Item[];
+};
+export type Page<T> = { items: T[]; page: number; size: number; total: number };
+export type Overdue = {
+  loan_id: string;
+  item_id: string;
+  book_title: string;
+  member_name: string;
+  due_at: string;
+  days_late: number;
+};
+export type Report = {
+  from: string;
+  to: string;
+  rows: {
+    book_id: string;
+    book_title: string;
+    category_name: string;
+    times_borrowed: number;
+  }[];
+};
