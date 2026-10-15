@@ -60,6 +60,9 @@ Las acciones se muestran según rol; el servidor sigue siendo responsable de aut
 existencias, unicidad, vencimientos y reglas de negocio. No hay alta de administradores ni
 edición/eliminación de socios o préstamos.
 
+La [revisión final de App](evidence/app-final-review.md) documenta la corrección de etiquetas
+pendiente de fusionar en main, sus 13 pruebas y el recorrido real repetido con la API ya fusionada.
+
 ### Desarrollo y verificación
 
 Requisitos: Node.js 26.5 y npm 11.17 o compatible con el lockfile.
@@ -95,8 +98,10 @@ docker build --build-arg VITE_API_BASE_URL=/api/v1 -t manager-library-app .
 
 El contenedor sirve archivos estáticos por su puerto interno 80. Su red, proxy HTTPS y conexión
 a Laravel corresponden a T-20 en infra. Este repositorio no crea tablas ni ejecuta migraciones.
-El Dockerfile se entrega para ese despliegue; la compilación local no acredita su construcción.
+El Dockerfile se construyó durante el recorrido integrado descrito en la revisión final.
+Una compilación Vite aislada sigue sin sustituir esa verificación de despliegue.
 
 El flujo React checks instala desde el lockfile, ejecuta pruebas y compila. La aceptación T-22
-de punta a punta sigue requiriendo API, base e infraestructura desplegadas juntas; los tests
-con respuestas simuladas no sustituyen ese recorrido. Se conserva la fecha original de entrega.
+de punta a punta requiere API, base e infraestructura desplegadas juntas; el recorrido automatizado
+real y sus revisiones se registran en la evidencia. Los tests simulados no lo sustituyen y la
+demostración manual en feria sigue separada. Se conserva la fecha original de entrega.
