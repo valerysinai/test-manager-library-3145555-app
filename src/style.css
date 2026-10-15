@@ -8,7 +8,7 @@
   --green: #204c42;
   --ink: #172f29;
   --border: #dfe5dc;
-  --muted: #69776f;
+  --muted: #5a695f;
 }
 * {
   box-sizing: border-box;
@@ -88,7 +88,7 @@ button:disabled {
   font-size: 0.68rem;
   letter-spacing: 2px;
   font-weight: 700;
-  color: #6a826e;
+  color: #526c57;
   margin-bottom: 14px;
 }
 .brand {
@@ -203,7 +203,7 @@ button:disabled {
 }
 .login-note {
   font-size: 0.73rem;
-  color: #7c877b;
+  color: #5b6758;
   margin-top: 30px;
   padding-top: 24px;
   border-top: 1px solid var(--border);
@@ -234,7 +234,7 @@ fieldset {
   font-weight: 400;
 }
 .field input::placeholder {
-  color: #96a092;
+  color: #62705d;
 }
 .workspace {
   display: flex;
@@ -337,7 +337,7 @@ fieldset {
 .top-label {
   font-size: 0.6rem;
   letter-spacing: 2px;
-  color: #778777;
+  color: #596d59;
 }
 .content {
   padding: 40px 42px;
@@ -481,11 +481,11 @@ fieldset {
 .badge.unavailable,
 .badge.closed {
   background: #f0f0e9;
-  color: #6f766d;
+  color: #596353;
 }
 .badge.overdue {
   background: #f9e9dd;
-  color: #a35b28;
+  color: #87471c;
 }
 .pager {
   display: flex;
@@ -535,7 +535,7 @@ fieldset {
   justify-content: center;
   align-items: center;
   background: #dce3cb;
-  color: #667557;
+  color: #4e603e;
   letter-spacing: 2px;
   font-family: Georgia, serif;
 }
@@ -557,7 +557,7 @@ table {
 }
 th {
   font-weight: 500;
-  color: #718071;
+  color: #566a56;
   background: #f3f5ef;
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -649,7 +649,7 @@ td button {
   display: flex;
   justify-content: space-between;
   font-size: 0.68rem;
-  color: #7d8a77;
+  color: #5b6758;
 }
 .skip-link {
   position: absolute;
