@@ -1,4 +1,12 @@
-import { useEffect, useState, type ReactNode, type FormEvent } from "react";
+import {
+  cloneElement,
+  useId,
+  useEffect,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type FormEvent,
+} from "react";
 import { ApiError } from "./api";
 import type { Page } from "./types";
 export function Failure({ error }: { error: unknown }) {
@@ -57,13 +65,14 @@ export function Field({
   children,
 }: {
   label: string;
-  children: ReactNode;
+  children: ReactElement<{ id?: string }>;
 }) {
+  const id = useId();
   return (
-    <label className="field">
-      <span>{label}</span>
-      {children}
-    </label>
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      {cloneElement(children, { id })}
+    </div>
   );
 }
 export function Panel({
