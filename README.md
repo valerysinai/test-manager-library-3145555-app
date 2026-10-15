@@ -51,6 +51,10 @@ No hay prórroga: suban avances parciales con commits pequeños durante la prueb
 
 ## T-22 · Interfaz React
 
+La [corrección de contraste y aceptación ampliada](evidence/text-contrast.md) añade el resultado
+posterior del recorrido de 42 vistas con teclado, errores y vencidos reales. Mantiene el producto
+y distingue estas comprobaciones de una certificación integral o presentación humana.
+
 El [plan SDD previo](evidence/t-22-plan.md) fue publicado antes del código. La
 [evidencia y lista de aceptación](evidence/t-22.md) distingue pruebas simuladas y recorrido integrado.
 
